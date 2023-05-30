@@ -1,17 +1,21 @@
 const blessed = require("blessed");
 
 const HELP_TEXT =
-  "/filter [string]  Filter out console messages unless they contain the string.\n" +
-  "/filter           Disable filtering.";
+  "/filter [include/exclude] [string]  Include/exclude console messages if they contain the string.\n" +
+  "/filter                             Disable filtering.";
 
-module.exports = function(multimeter) {
+module.exports = function (multimeter) {
   let filterString = null;
+  let include = true;
   let filterCount = 0;
 
-  multimeter.console.on("addLines", function(event) {
+  multimeter.console.on("addLines", function (event) {
     if (filterString && event.type === "log") {
-      let line = event.shard + ' ' + event.line;
-      if (! line.includes(filterString)) {
+      let line = event.shard + " " + event.line;
+      if (
+        (include && !line.includes(filterString)) ||
+        (!include && line.includes(filterString))
+      ) {
         event.skip = true;
         filterCount++;
         multimeter.updateStatus();
@@ -21,7 +25,7 @@ module.exports = function(multimeter) {
 
   multimeter.addStatus(function () {
     if (filterString) {
-      return 'FILTERED ' + filterCount;
+      return "FILTERED " + filterCount;
     }
   });
 
@@ -29,7 +33,8 @@ module.exports = function(multimeter) {
     if (args.length === 0) {
       filterString = null;
     } else {
-      filterString = args.join(' ');
+      include = args.shift() === "include";
+      filterString = args.join(" ");
       filterCount = 0;
     }
     multimeter.updateStatus();
