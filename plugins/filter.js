@@ -4,12 +4,12 @@ const HELP_TEXT =
   "/filter [include/exclude] [string]  Include/exclude console messages if they contain the string.\n" +
   "/filter                             Disable filtering.";
 
-module.exports = function (multimeter) {
+module.exports = function(multimeter) {
   let filterString = null;
   let include = true;
   let filterCount = 0;
 
-  multimeter.console.on("addLines", function (event) {
+  multimeter.console.on("addLines", function(event) {
     if (filterString && event.type === "log") {
       let line = event.shard + " " + event.line;
       if (
@@ -23,7 +23,7 @@ module.exports = function (multimeter) {
     }
   });
 
-  multimeter.addStatus(function () {
+  multimeter.addStatus(function() {
     if (filterString) {
       return "FILTERED " + filterCount;
     }
@@ -45,4 +45,10 @@ module.exports = function (multimeter) {
     helpText: HELP_TEXT,
     handler: commandFilter,
   });
+
+  // Load default filter
+  // Set in config as `filter: "[include/exclude] [string]"`
+  if (typeof multimeter.config.filter === "string") {
+    commandFilter(multimeter.config.filter.split(" "));
+  }
 };
